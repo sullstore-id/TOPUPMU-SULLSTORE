@@ -1,8 +1,9 @@
-// api/telegram-order.js
-
 export default async function handler(req, res) {
   if (req.method !== "POST") {
-    return res.status(405).json({ success: false, message: "Method not allowed" });
+    return res.status(405).json({
+      success: false,
+      message: "Method not allowed"
+    });
   }
 
   try {
@@ -29,56 +30,58 @@ export default async function handler(req, res) {
       });
     }
 
-    const text = `
-🛒 *PESANAN BARU SULLSTORE*
+    const message = `
+🛒 <b>PESANAN BARU SULLSTORE</b>
 
-🧾 *Invoice:* ${orderCode || "-"}
-🎮 *Produk:* ${game || "-"}
-📦 *Item:* ${item || "-"}
-💰 *Total:* ${total || "-"}
+🧾 <b>Invoice:</b> ${orderCode || "-"}
+🎮 <b>Produk:</b> ${game || "-"}
+📦 <b>Item:</b> ${item || "-"}
+💰 <b>Total:</b> ${total || "-"}
 
-👤 *Pembeli:* ${customerName || "Guest"}
-🆔 *User ID:* ${userId || "-"}
-🌐 *Server:* ${server || "-"}
-💳 *Payment:* ${payment || "-"}
+👤 <b>Pembeli:</b> ${customerName || "-"}
+🆔 <b>User ID:</b> ${userId || "-"}
+🌐 <b>Server:</b> ${server || "-"}
+💳 <b>Payment:</b> ${payment || "-"}
 
-📌 *Status:* ${status || "Menunggu Verifikasi Pembayaran"}
+📌 <b>Status:</b> ${status || "-"}
 
-📷 *Bukti Bayar:*
-${paymentProofUrl || "-"}
+${paymentProofUrl ? `📷 <b>Bukti Bayar:</b>\n${paymentProofUrl}` : ""}
 `;
 
-    const telegramRes = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        chat_id: CHAT_ID,
-        text,
-        parse_mode: "Markdown"
-      })
-    });
+    const telegramResponse = await fetch(
+      `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          chat_id: CHAT_ID,
+          text: message,
+          parse_mode: "HTML"
+        })
+      }
+    );
 
-    const telegramData = await telegramRes.json();
+    const telegramData = await telegramResponse.json();
 
-    if (!telegramData.ok) {
+    if (!telegramResponse.ok) {
       return res.status(500).json({
         success: false,
-        message: "Gagal kirim ke Telegram",
+        message: "Gagal kirim Telegram",
         telegramData
       });
     }
 
     return res.status(200).json({
       success: true,
-      message: "Notif Telegram terkirim"
+      message: "Notifikasi Telegram terkirim"
     });
 
   } catch (error) {
     return res.status(500).json({
       success: false,
-      message: error.message
+      message: error.message || "Server error"
     });
   }
 }
